@@ -36,7 +36,11 @@ class simulation:
 
 def potential(pot_type,num_of_states):
 
-    if pot_type.lower() == 'double_well':
+    if pot_type.lower() == 'single_well':
+        x = np.linspace(-np.pi, np.pi, num_of_states)
+        y = -np.sin(0.5*x + 0.5*np.pi)
+
+    elif pot_type.lower() == 'double_well':
         x = np.linspace(-np.pi, np.pi, num_of_states)
         y = np.sin(2*(x - 3*np.pi / 4))
 
@@ -44,8 +48,15 @@ def potential(pot_type,num_of_states):
         x = np.linspace(-np.pi, np.pi, num_of_states)
         y = np.sin(3*(x - 7*np.pi / 2))
 
+    elif pot_type.lower() == 'flat':
+        x = np.linspace(-np.pi, np.pi, num_of_states)
+        y = 0*x
+
+
     else:
         raise ValueError('invalid input potential type')
+
+    y = y-np.min(y)
 
     return x, y
 
@@ -59,8 +70,8 @@ def trajectory(x, y, sim_length, biasing_protocol, T):
 
     K = np.zeros([len(x),len(x)])
     for i in range(len(x)-1):
-        K[i,i+1] = A* np.exp(-(y[i+1]-y[i])/KbT)
-        K[i+1, i] = A * np.exp(-(y[i] - y[i+1]) / KbT)
+        K[i,i+1] = A* np.exp(-(y[i+1]-y[i])/KbT/2)
+        K[i+1, i] = A * np.exp(-(y[i] - y[i+1]) / KbT/2)
 
     for i in range(len(x)):
         K[i, i] = -np.sum(K[i,:])
@@ -69,9 +80,10 @@ def trajectory(x, y, sim_length, biasing_protocol, T):
     mm = expm(K*dt)
 
     # next we want to run a simulation of the Markov model produced above
-    traj = [np.random.random_integers(1, len(x))]
+    traj = [np.random.random_integers(0, len(x)-1)]
     count = 0
 
+    #ipdb.set_trace()
     while count < (sim_length-1):
         rand = np.random.uniform(0, 1)
         for j in range(len(x)):
