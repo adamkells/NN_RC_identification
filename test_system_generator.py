@@ -80,20 +80,20 @@ def trajectory(x, y, sim_length, biasing_protocol, T):
     mm = expm(K*dt)
 
     # next we want to run a simulation of the Markov model produced above
-    traj = [np.random.random_integers(0, len(x)-1)]
+    traj = [np.random.random_integers(1, len(x))]
     count = 0
 
     #ipdb.set_trace()
     while count < (sim_length-1):
         rand = np.random.uniform(0, 1)
         for j in range(len(x)):
-            if np.sum(mm[traj[count], 0:j+1]) > rand:
-                traj.append(j)
+            if np.sum(mm[traj[count]-1, 0:j+1]) > rand:
+                traj.append(j+1)
                 break
 
         count += 1
     #ipdb.set_trace()
-    #traj=traj[0][:-1]
+    #traj += 1
     return traj
 
 

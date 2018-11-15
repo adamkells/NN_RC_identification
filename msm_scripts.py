@@ -46,7 +46,7 @@ class data_set:
 
     def hist_data(self):
         plt.figure()
-        plt.hist(self.data, bins=max(self.data))
+        plt.hist(self.data, bins=(max(self.data)))
         plt.xlabel('Position')
         plt.ylabel('Counts')
         #plt.title('Simulation Trajectory: Position vs Time')
@@ -269,14 +269,13 @@ def iterative_hummer_szabo_method(MSM,N):
             a=sum(eq[1:5])
     """ This code is unfinished"""
 
-def free_energy_profile(MSM,temp):
+def free_energy_profile(MSM,temp,image=0):
 
     """
     :param MSM: Takes a Markov state model as an input (an N by N matrix describing transition probabilities)
     :return: G (the free energy profile of the MSM) and equilibrium (the equilibrium probabilities of the MSM states)
     """
     kbT = 0.001987 * temp
-    #ipdb.set_trace()
     val, vec = spectral_analysis(MSM.T)
     val = [x for x in val]
     maxpos = val.index(max(val))
@@ -285,9 +284,10 @@ def free_energy_profile(MSM,temp):
     G = -kbT*np.log(equilibrium)
     G = G - np.min(G)
 
-    fig1, ax1 = plt.subplots()
-    ax1.plot(G)
-    fig1.savefig('test.png')
+    if image == 1:
+        fig1, ax1 = plt.subplots()
+        ax1.plot(G)
+        fig1.savefig('test.png')
 
     return G , equilibrium
 
