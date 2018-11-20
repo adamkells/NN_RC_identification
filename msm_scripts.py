@@ -140,14 +140,16 @@ class discrete_markov_model:
 
             counts.append(counts_tmp)
             ntr.append(ntr_tmp)
-            bias_pos.append(data_inst.bias_pos)
+            bias_pos.append(self.x[data_inst.bias_pos])
             force.append(data_inst.force)
 
         if len(self.data_set) > 1:
             #ipdb.set_trace()
             ntr = np.sum(ntr,0)
 
-        MSM = dham_msm(self.num_bins, bin_centers, ntr, counts, force, bias_pos)
+        kbT = 0.001987 *self.temp
+
+        MSM = dham_msm(self.num_bins, bin_centers, ntr, counts, force, bias_pos, kbT)
 
         return MSM
 
@@ -224,7 +226,7 @@ def dham_prep(data, num_bins, lag_time):
 """ This function needs a massive overhaul, particularly to account for multiple simulation trajectories"""
 
 
-def dham_msm(num_bins, bin_centers, ntr, counts, force, bias_pos):
+def dham_msm(num_bins, bin_centers, ntr, counts, force, bias_pos, kbT):
     #ipdb.set_trace()
     MSM = np.zeros([num_bins, num_bins])
     for i in range(num_bins):
@@ -232,10 +234,9 @@ def dham_msm(num_bins, bin_centers, ntr, counts, force, bias_pos):
             if ntr[i][j] > 0:
                 msm_tmp = 0
                 for sim_num, counts_k in enumerate(counts):
-                    u=0.5*force[sim_num]*(bias_pos[sim_num]-bin_centers)
-                    #ipdb.set_trace()
+                    u=0.5*force[sim_num]*((bias_pos[sim_num]-bin_centers)**2)
                     if counts_k[0][i]>0:
-                         msm_tmp=msm_tmp+counts_k[0][i]*np.exp(-(u[j]-u[i])/2)
+                         msm_tmp=msm_tmp+counts_k[0][i]*np.exp((u[j]-u[i])/2/kbT)
                 MSM[i][j]=ntr[i][j]/msm_tmp
 
     row_sums = MSM.sum(axis=1)

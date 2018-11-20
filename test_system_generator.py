@@ -38,15 +38,15 @@ def potential(pot_type,num_of_states):
 
     if pot_type.lower() == 'single_well':
         x = np.linspace(-np.pi, np.pi, num_of_states)
-        y = -np.sin(0.5*x + 0.5*np.pi)
+        y = -3*np.sin(0.5*x + 0.5*np.pi)
 
     elif pot_type.lower() == 'double_well':
         x = np.linspace(-np.pi, np.pi, num_of_states)
-        y = np.sin(2*(x - 3*np.pi / 4))
+        y = 3*np.sin(2*(x - 3*np.pi / 4))
 
     elif pot_type.lower() == 'triple_well':
         x = np.linspace(-np.pi, np.pi, num_of_states)
-        y = np.sin(3*(x - 7*np.pi / 2))
+        y = 3*np.sin(3*(x - 7*np.pi / 2))
 
     elif pot_type.lower() == 'flat':
         x = np.linspace(-np.pi, np.pi, num_of_states)
@@ -63,7 +63,7 @@ def potential(pot_type,num_of_states):
 def trajectory(x, y, sim_length, biasing_protocol, T):
 
     # first construct the Markov matrix for the process
-    v_bias = biasing_protocol[0]*(x - x[biasing_protocol[1]])**2
+    v_bias = 0.5*biasing_protocol[0]*(x - x[biasing_protocol[1]])**2
     y = y + v_bias
     A = 10 # Arrhenius factor
     KbT = 0.001987 * T
