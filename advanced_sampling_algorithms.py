@@ -18,5 +18,5 @@ def linear_regression_enhanced_sampling(dataset):
         forces.append(item.force)
         bias_pos.append(item.bias_pos)
 
-    
+
 

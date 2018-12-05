@@ -209,10 +209,12 @@ def dham_prep(data, num_bins, lag_time):
     :param lag_time: the lag time of the model
     :return:
     """
+    bins_sim = range(num_bins+1)
+    bins_sim = [ (x+0.5) for x in bins_sim]
 
     counts=[]
     #ipdb.set_trace()
-    hist, bin_edges = np.histogram(data,bins=num_bins)
+    hist, bin_edges = np.histogram(data,bins=bins_sim)
     counts.append(hist)
 
     # next we need to count transition numbers
@@ -236,7 +238,7 @@ def dham_msm(num_bins, bin_centers, ntr, counts, force, bias_pos, kbT):
                 for sim_num, counts_k in enumerate(counts):
                     u=0.5*force[sim_num]*((bias_pos[sim_num]-bin_centers)**2)
                     if counts_k[0][i]>0:
-                         msm_tmp=msm_tmp+counts_k[0][i]*np.exp((u[j]-u[i])/2/kbT)
+                         msm_tmp=msm_tmp+counts_k[0][i]*np.exp(-(u[j]-u[i])/2/kbT)
                 MSM[i][j]=ntr[i][j]/msm_tmp
 
     row_sums = MSM.sum(axis=1)
