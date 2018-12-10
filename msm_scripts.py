@@ -125,7 +125,7 @@ class discrete_markov_model:
         self.temp = simulation.temp
         self.MSM = self.markov_analysis()
 
-        print("(Created a Markov model object at lag time {} consisting of {} trajctories)".format(self.lag_time,
+        print("(Created a Markov model object at lag time {} consisting of {} trajectories)".format(self.lag_time,
                                                                                                    len(self.data_set)))
     def markov_analysis(self):
         # define my bin edges
