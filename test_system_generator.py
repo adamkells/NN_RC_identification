@@ -11,7 +11,7 @@ import ipdb
 # and then have a function i can call on it to create a data object to pass to my msm scripts
 
 class simulation:
-    def __init__(self, potential, sim_length, dt, biasing_protocol, num_of_states, T, initial_state):
+    def __init__(self, potential, sim_length, term, dt, biasing_protocol, num_of_states, T, initial_state):
         self.pot = potential
         self.length = sim_length
         self.bias = biasing_protocol
@@ -19,6 +19,7 @@ class simulation:
         self.temp = T
         self.initial = initial_state
         self.dt = dt
+        self.term = term
         if not biasing_protocol[1] in range(num_of_states):
             raise ValueError('Biasing position is not a valid state index. Make sure these values are integers from 1 to num_of_states')
 
@@ -29,6 +30,18 @@ class simulation:
         particular biasing protocol"""
         x ,y = potential(self.pot, self.states)
         traj = trajectory(x, y, self.length, self.dt, self.bias, self.temp,self.initial)
+        simulation_data = data_set(traj, bias_pos=self.bias[1], force=self.bias[0], T=self.temp)
+        self.x = x
+        self.y = y
+        return simulation_data
+
+    def generate_limited_data(self, num_of_traj=1):
+
+        """ next i would need some functions to a) create a selection of different potentials of interest b) define a
+        markov chain monte carlo transition step c) generate the specified number of transitions according to a
+        particular biasing protocol"""
+        x ,y = potential(self.pot, self.states)
+        traj = limited_trajectory(x, y, self.term, self.dt, self.bias, self.temp, self.initial)
         simulation_data = data_set(traj, bias_pos=self.bias[1], force=self.bias[0], T=self.temp)
         self.x = x
         self.y = y
@@ -97,9 +110,45 @@ def trajectory(x, y, sim_length, dt, biasing_protocol, T, initial_state):
                 break
 
         count += 1
-    #ipdb.set_trace()
-    #traj += 1
+
     return traj
 
 
+def limited_trajectory(x, y, term, dt, biasing_protocol, T, initial_state):
 
+    # first construct the Markov matrix for the process
+    v_bias = 0.5*biasing_protocol[0]*(x - x[biasing_protocol[1]])**2
+    y = y + v_bias
+    A = 10 # Arrhenius factor
+    KbT = 0.001987 * T
+
+    K = np.zeros([len(x),len(x)])
+    for i in range(len(x)-1):
+        K[i,i+1] = A* np.exp(-(y[i+1]-y[i])/KbT/2)
+        K[i+1, i] = A * np.exp(-(y[i] - y[i+1]) / KbT/2)
+
+    for i in range(len(x)):
+        K[i, i] = -np.sum(K[i,:])
+
+    mm = expm(K*dt)
+
+    G, eq = free_energy_profile(mm, T)
+
+    # next we want to run a simulation of the Markov model produced above
+    if initial_state != 0:
+        traj = [initial_state]
+    else:
+        traj = [np.random.choice(np.arange(1, len(x)+1), p=np.real(eq))]
+
+    count = 0
+
+    while traj[-1] not in term:
+        rand = np.random.uniform(0, 1)
+        for j in range(len(x)):
+            if np.sum(mm[traj[count]-1, 0:j+1]) > rand:
+                traj.append(j+1)
+                break
+
+        count += 1
+
+    return traj
